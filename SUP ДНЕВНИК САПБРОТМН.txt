@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1f6d7a">
+    <title>SUP дневник • САПБРОТМН</title>
+    
+    <!-- PWA META TAGS -->
+    <link rel="manifest" href="data:application/manifest+json,{%22name%22:%22SUP%20%D0%B4%D0%BD%D0%B5%D0%B2%D0%BD%D0%B8%D0%BA%20%E2%80%A2%20%D0%A1%D0%90%D0%9F%D0%91%D0%A0%D0%9E%D0%A2%D0%9C%D0%9D%22,%22short_name%22:%22%D0%A1%D0%90%D0%9F%D0%91%D0%A0%D0%9E%D0%A2%D0%9C%D0%9D%22,%22description%22:%22%D0%A2%D1%80%D0%B5%D0%BA%D0%B5%D1%80%20SUP-%D0%B7%D0%B0%D0%BF%D0%BB%D1%8B%D0%B2%D0%BE%D0%B2%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22theme_color%22:%22#1f6d7a%22,%22background_color%22:%22#1f6d7a%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20100%20100'%3E%3Crect%20width='100'%20height='100'%20fill='%231f6d7a'/%3E%3Ctext%20x='50'%20y='68'%20font-size='60'%20text-anchor='middle'%20fill='white'%3E🏄%3C/text%3E%3C/svg%3E%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}]}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="САПБРОТМН">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg: #f8fafc; --bg-card: #ffffff; --bg-card-solid: #f1f5f9;
+            --text: #1e293b; --text-muted: #64748b; --primary: #1f6d7a;
+            --primary-glow: rgba(31,109,122,0.15); --accent: #e9b35f;
+            --accent-glow: rgba(233,179,95,0.2); --danger: #ef4444;
+            --border: #e2e8f0; --shadow: 0 4px 20px rgba(31,109,122,0.08);
+            --radius: 20px; --radius-sm: 14px; --font: 'Manrope', sans-serif;
+        }
+        [data-theme="dark"] {
+            --bg: #0f172a; --bg-card: #1e293b; --bg-card-solid: #334155;
+            --text: #f1f5f9; --text-muted: #94a3b8; --primary: #2dd4bf;
+            --primary-glow: rgba(45,212,191,0.2); --accent: #fbbf24;
+            --accent-glow: rgba(251,191,36,0.2); --border: #334155;
+            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font); background: var(--bg); color: var(--text); padding-bottom: 100px; transition: background 0.3s, color 0.3s; }
+        .container { max-width: 680px; margin: 0 auto; padding: 1rem; }
+        header { display: grid; grid-template-columns: auto 1fr auto; align-items: center; padding: 0.8rem 0 1.2rem; gap: 1rem; }
+        .logo { display: flex; align-items: center; gap: 0.5rem; }
+        .logo-svg { width: 35px; height: 100px; }
+        .header-title { text-align: center; font-size: 1.5rem; font-weight: 800; color: var(--primary); line-height: 1.25; text-decoration: none; cursor: pointer; text-transform: uppercase; }
+        .header-title:hover { opacity: 0.8; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 12px; background: var(--bg-card); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; color: var(--text); }
+        .profile-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.3rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+        .profile-avatar { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; color: white; margin-bottom: 0.5rem; }
+        .profile-avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .card, .challenge-card, .weather-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.3rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+        .card-title { font-size: 1.15rem; font-weight: 700; margin-bottom: 1.2rem; padding-bottom: 0.6rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 0.5rem; }
+        .profile-header { display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem; }
+        .profile-info h2 { font-size: 1.25rem; font-weight: 700; }
+        .profile-title { font-size: 0.9rem; color: var(--primary); font-weight: 600; }
+        .profile-badge { background: linear-gradient(135deg, var(--primary), #185560); color: white; padding: 0.35rem 1rem; border-radius: 50px; font-weight: 700; font-size: 0.85rem; }
+        .xp-ring { display: flex; align-items: center; gap: 1rem; margin: 1rem 0; }
+        .ring { width: 56px; height: 56px; border-radius: 50%; background: conic-gradient(var(--accent) calc(var(--pct, 0) * 1%), rgba(138,157,179,0.2) 0); display: flex; align-items: center; justify-content: center; position: relative; }
+        .ring::before { content: ''; position: absolute; inset: 4px; background: var(--bg-card-solid); border-radius: 50%; }
+        .ring-text { position: relative; z-index: 1; font-size: 0.85rem; font-weight: 700; }
+        .xp-details { flex: 1; }
+        .xp-bar { height: 6px; background: rgba(138,157,179,0.2); border-radius: 3px; overflow: hidden; }
+        .xp-bar-fill { height: 100%; background: var(--accent); transition: width 0.3s; }
+        .profile-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.8rem; margin-top: 1rem; }
+        .stat { text-align: center; padding: 0.7rem; background: var(--bg-card-solid); border-radius: 14px; border: 1px solid var(--border); }
+        .stat-value { font-size: 1.4rem; font-weight: 800; color: var(--primary); }
+        .stat-label { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; }
+        .challenge-progress { display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem; }
+        .progress-track { flex: 1; height: 8px; background: rgba(138,157,179,0.2); border-radius: 4px; overflow: hidden; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.3s; }
+        .weather-icon { font-size: 2rem; background: var(--bg-card-solid); width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; }
+        .weather-card { display: flex; align-items: center; gap: 1rem; }
+        .weather-info { flex: 1; }
+        .weather-temp { font-size: 1.4rem; font-weight: 700; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin-bottom: 1rem; }
+        input, select, textarea { width: 100%; padding: 0.9rem 1rem; border-radius: 12px; border: 1px solid var(--border); background: var(--bg-card-solid); color: var(--text); font-family: inherit; font-size: 0.95rem; margin-bottom: 0.8rem; }
+        .btn { background: linear-gradient(135deg, var(--primary), #185560); color: white; border: none; padding: 0.95rem 1.4rem; border-radius: 14px; font-weight: 700; cursor: pointer; transition: 0.2s; width: 100%; margin-top: 0.8rem; }
+        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-danger { background: var(--danger); }
+        .btn-sm { padding: 0.55rem 1rem; font-size: 0.85rem; width: auto; }
+        .entry { display: flex; gap: 1rem; padding: 1rem; border-radius: 16px; background: var(--bg-card-solid); border: 1px solid var(--border); margin-bottom: 0.8rem; }
+        .entry-photo { width: 70px; height: 70px; border-radius: 14px; object-fit: cover; background: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .entry-dist { font-size: 1.2rem; font-weight: 800; color: var(--primary); }
+        .entry-type { font-size: 0.7rem; padding: 0.2rem 0.6rem; background: var(--primary-glow); color: var(--primary); border-radius: 50px; display: inline-block; }
+        .tabs { position: fixed; bottom: 0; left: 0; right: 0; background: var(--bg-card); border-top: 1px solid var(--border); display: flex; justify-content: space-around; padding: 0.4rem 0.2rem calc(0.5rem + env(safe-area-inset-bottom,0px)); z-index: 100; backdrop-filter: blur(16px); }
+        .tab { display: flex; flex-direction: column; align-items: center; gap: 0.1rem; padding: 0.3rem 0.1rem; border-radius: 10px; cursor: pointer; color: var(--text-muted); font-size: 0.6rem; font-weight: 600; flex: 1; min-width: 0; text-align: center; white-space: nowrap; }
+        .tab-icon { font-size: 1.1rem; }
+        @media (max-width: 360px) { .tab { font-size: 0.55rem; } .tab-icon { font-size: 1rem; } }
+        .tab-content { display: none; animation: fade 0.3s ease; }
+        .tab-content.active { display: block; }
+        @keyframes fade { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .ach-category { margin-bottom: 2rem; }
+        .ach-category-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 0.5rem; }
+        .ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
+        .ach-card { background: var(--bg-card-solid); border: 1px solid var(--border); border-radius: 20px; padding: 1rem; text-align: center; transition: all 0.3s; }
+        .ach-card.unlocked { border-color: var(--accent); background: linear-gradient(135deg, rgba(233,179,95,0.12), rgba(233,179,95,0.04)); box-shadow: 0 4px 20px rgba(233,179,95,0.15); }
+        .ach-icon { font-size: 2rem; filter: grayscale(100%); transition: all 0.3s; }
+        .ach-card.unlocked .ach-icon { filter: grayscale(0%); transform: scale(1.1); }
+        .ach-name { font-weight: 800; font-size: 0.9rem; margin: 0.3rem 0; }
+        .ach-progress-bar { height: 6px; background: rgba(0,0,0,0.1); border-radius: 3px; margin: 0.5rem 0; }
+        .ach-progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+        .route-card { display: flex; gap: 1rem; background: var(--bg-card-solid); border-radius: 16px; padding: 1rem; margin-bottom: 0.8rem; cursor: pointer; }
+        #routeMap { height: 250px; border-radius: 16px; margin: 1rem 0; }
+        .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: var(--bg-card); padding: 0.6rem 1.2rem; border-radius: 40px; z-index: 200; opacity: 0; transition: 0.3s; pointer-events: none; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .toast.show { opacity: 1; }
+        .footer { margin-top: 2rem; text-align: center; font-size: 0.75rem; color: var(--text-muted); padding: 1.5rem 1rem; border-top: 1px solid var(--border); line-height: 1.8; }
+        .footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .hidden { display: none; }
+        .mt-1 { margin-top: 0.8rem; }
+        .photo-preview { display: flex; gap: 0.5rem; margin-top: 0.5rem; flex-wrap: wrap; }
+        .photo-thumb { width: 60px; height: 60px; border-radius: 10px; object-fit: cover; }
+        .surprise-card { background: linear-gradient(135deg, var(--primary-glow), var(--accent-glow)); border-radius: 20px; padding: 1.2rem; margin-bottom: 1rem; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem; margin-bottom: 1rem; }
+        .stat-card { background: var(--bg-card-solid); border-radius: 16px; padding: 0.8rem; text-align: center; border: 1px solid var(--border); }
+        .stat-card-value { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
+        .chart-container { margin-bottom: 1.5rem; }
+        .calendar-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .calendar-nav button { width: auto; padding: 0.5rem 1rem; }
+        .calendar-month { font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+        .calendar-grid { display: flex; flex-direction: column; gap: 0.3rem; }
+        .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 0.7rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.3rem; }
+        .calendar-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 500; border-radius: 12px; background: var(--bg-card-solid); border: 1px solid var(--border); cursor: pointer; transition: transform 0.1s; }
+        .calendar-day:hover { transform: scale(1.05); }
+        .calendar-day.empty { background: transparent; border: none; cursor: default; }
+        .calendar-day.today { border-color: var(--accent); background: var(--accent-glow); }
+        .calendar-level-0 { background: var(--bg-card-solid); }
+        .calendar-level-1 { background: #cbd5e1; }
+        .calendar-level-2 { background: #94a3b8; }
+        .calendar-level-3 { background: var(--primary); color: white; }
+        .calendar-level-4 { background: #0f5c67; color: white; }
+        [data-theme="dark"] .calendar-level-1 { background: #334155; }
+        [data-theme="dark"] .calendar-level-2 { background: #475569; }
+        [data-theme="dark"] .calendar-level-3 { background: #2dd4bf; }
+        [data-theme="dark"] .calendar-level-4 { background: #14b8a6; }
+        .selected-date-info { margin-top: 1.2rem; padding: 1rem; background: var(--bg-card-solid); border-radius: 16px; text-align: center; font-weight: 600; border: 1px solid var(--border); }
+        .step { display: flex; gap: 1rem; margin-bottom: 1rem; padding: 0.8rem; background: rgba(255,255,255,0.03); border-radius: 12px; border-left: 3px solid var(--primary); }
+        .step-num { min-width: 28px; height: 28px; background: var(--primary); color: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 0.9rem; }
+        .birthday-fields { display: flex; gap: 0.8rem; margin-bottom: 0.8rem; }
+        .avatar-settings { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+        .avatar-settings .profile-avatar { width: 60px; height: 60px; margin-bottom: 0; }
+        #shareCard { width: 600px; height: 600px; background: radial-gradient(circle at 50% 30%, #1e293b 0%, #0f172a 100%); color: #e2e8f0; position: absolute; top: -2000px; left: -2000px; padding: 30px; border: 3px solid #d97706; border-radius: 24px; display: flex; flex-direction: column; }
+        .sc-header { display: flex; align-items: center; gap: 20px; margin-bottom: 25px; }
+        .sc-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; border: 3px solid #fbbf24; overflow: hidden; }
+        .sc-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px; }
+        .sc-stat-box { background: rgba(30,41,59,0.6); padding: 10px; border-radius: 12px; text-align: center; }
+        .sc-stat-val { font-size: 1.5rem; font-weight: 800; color: #fbbf24; }
+        .sc-stat-lbl { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; margin-top: 4px; }
+        .sc-medals { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; flex-grow: 1; margin-bottom: 20px; }
+        .sc-medal { background: rgba(15,23,42,0.5); border-radius: 10px; padding: 8px; text-align: center; }
+        .sc-medal.locked { opacity: 0.2; filter: grayscale(100%); }
+        .sc-medal.gold { background: rgba(217,119,6,0.2); border-color: #d97706; }
+        .sc-footer { text-align: center; padding-top: 15px; border-top: 1px solid rgba(217,119,6,0.3); }
+        .sc-hashtag { font-size: 1.2rem; font-weight: 800; color: #fbbf24; margin-top: 5px; }
+        @media (max-width: 550px) { .header-title { font-size: 1.1rem; } .profile-stats { grid-template-columns: 1fr; } .step { flex-direction: column; gap: 0.5rem; } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <div class="logo"><svg class="logo-svg" viewBox="0 0 100 300"><ellipse cx="50" cy="150" rx="30" ry="140" fill="#3b34ea"/><rect x="47" y="30" width="6" height="240" fill="white"/><text x="50" y="135" font-family="Arial" font-weight="900" font-size="20" fill="black" text-anchor="middle">САП</text><text x="50" y="155" font-family="Arial" font-weight="900" font-size="20" fill="black" text-anchor="middle">БРО</text><text x="50" y="175" font-family="Arial" font-weight="900" font-size="20" fill="black" text-anchor="middle">ТМН</text></svg></div>
+        <a href="https://vk.com/supbrotmn" target="_blank" class="header-title">SUP ДНЕВНИК<br>САПБРОТМН</a>
+        <button class="icon-btn" id="themeToggle" aria-label="Сменить тему">🌓</button>
+    </header>
+
+    <div class="profile-card">
+        <div class="profile-header">
+            <div><div class="profile-avatar" id="profileAvatar">🏄</div><h2 id="pName">Загрузка...</h2><div class="profile-title" id="pTitle">🧭 Начинающий</div></div>
+            <div class="profile-badge" id="pLevel">Ур. 1</div>
+        </div>
+        <div class="xp-ring"><div class="ring" id="xpRing" style="--pct:0"><span class="ring-text" id="xpRingText">0%</span></div><div class="xp-details"><div class="xp-bar"><div class="xp-bar-fill" id="xpBar" style="width:0%"></div></div><div id="xpText" style="font-size:0.75rem;">0 / 200 XP</div></div></div>
+        <div class="profile-stats"><div class="stat"><div class="stat-value" id="sKm">0</div><div class="stat-label">км</div></div><div class="stat"><div class="stat-value" id="sTrips">0</div><div class="stat-label">выходов на воду</div></div><div class="stat"><div class="stat-value" id="sStreak">0</div><div class="stat-label">дней без перерыва</div></div></div>
+    </div>
+
+    <div class="surprise-card" id="surpriseCard" style="display:none;"><div class="surprise-title">🎲 Сюрприз дня!</div><div id="surpriseDesc"></div><div class="surprise-reward" id="surpriseReward"></div></div>
+    <div class="challenge-card"><div class="challenge-head" style="display:flex; justify-content:space-between;"><b>🔥 Еженедельный челлендж</b><span id="chTarget">15 км</span></div><div class="challenge-progress"><div class="progress-track"><div class="progress-fill" id="chFill" style="width:0%"></div></div><div id="chCurrent">0 / 15 км</div></div></div>
+    <div class="weather-card"><div class="weather-icon" id="wIcon">⛅</div><div class="weather-info"><div class="weather-temp" id="wTemp">--°C</div><div id="wDesc">Загрузка...</div><div id="wWind">Тюмень</div></div><button class="icon-btn" id="wRefresh" aria-label="Обновить погоду" style="width:36px;">🔄</button></div>
+
+    <!-- Дневник -->
+    <div id="tab-diary" class="tab-content active">
+        <div class="card"><div class="card-title">✍️ Новый сплав</div>
+            <form id="entryForm"><div class="form-grid"><input type="date" id="eDate" required><input type="number" id="eDist" step="0.1" placeholder="Дистанция (км)" required><input type="number" id="eHours" placeholder="Часы"><input type="number" id="eMinutes" placeholder="Минуты"><select id="eType"><option value="легкий">🌊 Лёгкий</option><option value="тренировка">⚡ Тренировка</option><option value="длинный">🏞️ Длинный</option><option value="экспедиция">🗺️ Экспедиция</option><option value="матрас">🛏️ Матрас</option><option value="пиво">🍺 С пивом</option><option value="загар">🏖️ Загорал</option></select><input type="text" id="ePlace" placeholder="📍 Место"></div><textarea id="eDesc" placeholder="Впечатления, погода, маршрут..." rows="3"></textarea><input type="file" id="ePhoto" accept="image/*" style="display:none;"><button type="button" class="btn btn-outline" id="pickPhoto" aria-label="Выбрать фото для заплыва">📸 Выбрать фото</button><div id="photoPrev" class="photo-preview"></div><button type="submit" class="btn" aria-label="Сохранить заплыв">💾 Сохранить заплыв</button></form></div>
+        <div class="card"><div class="card-title">📒 История</div><div id="entriesList"></div></div>
+    </div>
+
+    <!-- Статистика -->
+    <div id="tab-stats" class="tab-content">
+        <div class="card"><div class="card-title">📊 Статистика</div>
+            <div class="stats-grid"><div class="stat-card"><div class="stat-card-value" id="statAvgKm">0</div><div>сред. км/день</div></div><div class="stat-card"><div class="stat-card-value" id="statTotalDays">0</div><div>дней на воде</div></div><div class="stat-card"><div class="stat-card-value" id="statMaxDay">0</div><div>макс. км/день</div></div><div class="stat-card"><div class="stat-card-value" id="statTypes">0</div><div>типов сплава</div></div></div>
+            <div class="chart-container"><canvas id="kmChart"></canvas></div>
+            <div class="chart-container"><canvas id="typeChart"></canvas></div>
+            <div class="card-title">📅 Календарь активности</div>
+            <div class="calendar-nav"><button class="btn-outline btn-sm" id="prevMonth" aria-label="Предыдущий месяц">◀ Пред.</button><span class="calendar-month" id="currentMonthLabel">Май 2025</span><button class="btn-outline btn-sm" id="nextMonth" aria-label="Следующий месяц">След. ▶</button></div>
+            <div id="calendarContainer"></div>
+            <div id="selectedDateInfo" class="selected-date-info">👆 Нажмите на день, чтобы увидеть дистанцию</div>
+        </div>
+        <button class="btn btn-outline" id="shareCardBtn" aria-label="Поделиться прогрессом">📱 Поделиться прогрессом</button>
+    </div>
+
+    <!-- Маршруты -->
+    <div id="tab-routes" class="tab-content"><div class="card"><div class="card-title">🗺️ Маршруты</div><input type="file" id="gpxFile" accept=".gpx" style="display:none;"><button class="btn-outline btn" id="pickGpxBtn" aria-label="Загрузить GPX файл">📁 Загрузить GPX</button><div id="gpxPreview" class="hidden mt-1"><div id="routeMap"></div><div id="gpxStats"></div><input type="text" id="routeName" placeholder="Название"><select id="routeDiff"><option value="легкий">🌊 Лёгкий</option><option value="средний">⛰️ Средний</option><option value="сложный">🔥 Сложный</option></select><button class="btn mt-1" id="saveRouteBtn" aria-label="Сохранить маршрут">💾 Сохранить</button></div><div id="routesList" class="mt-1"></div></div></div>
+
+    <!-- Достижения -->
+    <div id="tab-ach" class="tab-content"><div class="card"><div class="card-title">🏅 Достижения</div><div id="achievementsList"></div></div></div>
+
+    <!-- Настройки -->
+    <div id="tab-settings" class="tab-content">
+        <div class="card" style="padding:0; overflow:hidden;">
+            <div style="background: linear-gradient(135deg, var(--primary-glow), var(--accent-glow)); padding:1.5rem; border-bottom:1px solid var(--border);"><div class="card-title" style="margin-bottom:0.5rem; border-bottom:none; padding-bottom:0;">📖 Как пользоваться приложением</div><div style="font-size:0.9rem; color:var(--text-muted);">Твой прогресс. Твоя статистика. Наше комьюнити.</div></div>
+            <div style="padding:1.5rem;">
+                <p style="margin-bottom:1rem;">Привет, райдер! 👋<br>Это официальная инструкция по приложению <strong>«SUP дневник • САПБРОТМН»</strong>.</p>
+                <div class="ach-category-title">🚀 Быстрый старт</div>
+                <div class="step"><div class="step-num">1</div><div><h4>Заполни профиль</h4><ul><li>Зайди в «⚙️ Настройки» → «👤 Профиль»</li><li>Укажи имя, город, дату рождения</li><li>Загрузи фото профиля</li><li>Нажми «Сохранить»</li></ul></div></div>
+                <div class="step"><div class="step-num">2</div><div><h4>Добавь первый заплыв</h4><ul><li>Нажми «➕ Новый сплав» внизу экрана</li><li>Укажи дату, дистанцию (км), время</li><li>Выбери тип сплава</li><li>Укажи место, добавь впечатления и фото</li><li>Нажми «💾 Сохранить заплыв»</li></ul></div></div>
+                <div class="step"><div class="step-num">3</div><div><h4>Смотри прогресс</h4><ul><li>В профиле: километры, выходы, серия дней</li><li>Во вкладке «📊 Статистика»: графики, календарь активности</li><li>Во вкладке «🏆 Достижения»: твои награды</li></ul></div></div>
+                <div class="ach-category-title">⚡ Система XP и уровней</div>
+                <p>XP начисляется: 1 км = 15 XP, 1 заплыв = 30 XP, бонусы от сюрпризов и челленджей.</p>
+                <div style="background:var(--bg-card-solid); border-left:4px solid var(--primary); padding:0.8rem; border-radius:12px; margin:0.8rem 0;"><strong>📈 Как растут уровни?</strong><br>Для перехода на 2-й уровень нужно 200 XP. С каждым уровнем порог растёт на +25 XP. Максимальный уровень — 50 («Легенда»).</div>
+                <div class="ach-category-title">📊 Вкладка «Статистика»</div>
+                <div class="step"><div class="step-num">📈</div><div><h4>Графики</h4><ul><li>Столбчатая диаграмма: дистанция за последние 14 дней</li><li>Круговая диаграмма: распределение по типам сплавов</li></ul></div></div>
+                <div class="step"><div class="step-num">📅</div><div><h4>Календарь активности</h4><ul><li>Цветовая индикация: чем темнее — тем больше км</li><li>Нажми на любой день — увидишь дистанцию</li></ul></div></div>
+                <div class="step"><div class="step-num">📱</div><div><h4>Поделиться прогрессом</h4><ul><li>Нажми «📱 Поделиться прогрессом» → сохранится карточка с аватаркой и статистикой</li></ul></div></div>
+                <div class="ach-category-title">🗺️ Вкладка «Маршруты»</div>
+                <div class="step"><div class="step-num">1</div><div><h4>Загрузить трек (GPX)</h4><ul><li>Нажми «📁 Загрузить GPX», выбери файл, трек отобразится на карте</li><li>Укажи название, сложность, описание → «💾 Сохранить»</li></ul></div></div>
+                <div class="step"><div class="step-num">2</div><div><h4>Просмотреть маршрут</h4><ul><li>Нажми на сохранённый маршрут в списке — откроется на карте</li></ul></div></div>
+                <div class="ach-category-title">🏆 Вкладка «Достижения»</div>
+                <p>7 категорий наград, которые открываются автоматически. Разблокированные награды подсвечиваются золотым.</p>
+                <div class="ach-category-title">💾 Экспорт и импорт данных</div>
+                <div class="step"><div class="step-num">📥</div><div><h4>Экспорт (резервная копия)</h4><ul><li>Зайди в «⚙️ Настройки» → «💾 Данные» → «📥 Экспорт всего»</li><li>Сохрани файл supbrotmn_дата.json</li></ul></div></div>
+                <div class="step"><div class="step-num">📤</div><div><h4>Импорт (восстановление)</h4><ul><li>Нажми «📤 Импорт», выбери ранее сохранённый JSON-файл</li></ul></div></div>
+                <div style="background:var(--bg-card-solid); border-left:4px solid var(--accent); padding:0.8rem; border-radius:12px; margin-bottom:1rem;"><strong>⚠️ Важно</strong><br>Фото профиля не экспортируется — сохраняется отдельно.</div>
+                <div class="ach-category-title">🌙 Тёмная тема</div>
+                <p>Нажми на иконку <strong>🌓</strong> в правом верхнем углу, чтобы переключить тему.</p>
+                <div class="ach-category-title">❓ Частые вопросы</div>
+                <div class="step"><div class="step-num">❓</div><div><h4>Где хранятся мои данные?</h4><p>Все данные хранятся локально на твоём телефоне (в браузере). Они не отправляются на сервер без твоего согласия.</p></div></div>
+                <div class="step"><div class="step-num">❓</div><div><h4>Как попасть в общий рейтинг комьюнити?</h4><p>Раз в месяц сделай экспорт данных и отправь файл администратору в ВК в <a href="https://vk.com/sup_tyumen" target="_blank" style="color:var(--primary);">ЛС https://vk.com/sup_tyumen</a> с хештегом #МОЯСТАТИСТИКА.</p></div></div>
+                <div class="step"><div class="step-num">❓</div><div><h4>Что такое «серия дней»?</h4><p>Количество дней подряд, когда ты добавлял заплыв. Пропустил день — серия сбрасывается.</p></div></div>
+                <div style="margin-top:1.5rem; text-align:center;"><a href="https://vk.com/sup_tyumen" target="_blank" style="display:inline-block; padding:0.5rem 1rem; background:var(--accent); color:var(--bg); border-radius:12px; text-decoration:none; font-weight:600;">Написать в ВКонтакте</a></div>
+            </div>
+        </div>
+        <div class="card"><div class="card-title">👤 Профиль</div>
+            <div class="avatar-settings"><div class="profile-avatar" id="settingsAvatar">🏄</div><div class="avatar-buttons"><button class="btn-outline btn-sm" id="uploadAvatarBtn" aria-label="Загрузить фото профиля">📸 Загрузить фото</button><button class="btn-danger btn-sm" id="removeAvatarBtn" aria-label="Удалить фото профиля" style="display:none;">🗑️ Удалить</button></div></div>
+            <input type="text" id="setName" placeholder="Ваше имя"><input type="text" id="setLocation" placeholder="Город (например: Тюмень)">
+            <div class="birthday-fields"><select id="setBirthdayDay"><option value="">День</option></select><select id="setBirthdayMonth"><option value="">Месяц</option></select></div>
+            <input type="text" id="setBoard" placeholder="Ваш сапборд (модель)"><button class="btn" id="saveSettings" aria-label="Сохранить настройки профиля">Сохранить</button>
+        </div>
+        <div class="card"><div class="card-title">💾 Данные</div><button class="btn-outline btn" id="exportBtn" aria-label="Экспортировать все данные">📥 Экспорт всего</button><button class="btn-outline btn" id="importBtn" aria-label="Импортировать данные из файла">📤 Импорт</button><input type="file" id="importFile" accept=".json" style="display:none;"><button class="btn-danger btn" id="resetBtn" aria-label="Сбросить все данные">⚠️ Сброс всех данных</button></div>
+    </div>
+</div>
+
+<nav class="tabs">
+    <div class="tab active" data-tab="diary"><span class="tab-icon">📔</span><span>Дневник</span></div>
+    <div class="tab" data-tab="stats"><span class="tab-icon">📊</span><span>Статистика</span></div>
+    <div class="tab" data-tab="routes"><span class="tab-icon">🗺️</span><span>Маршруты</span></div>
+    <div class="tab" data-tab="ach"><span class="tab-icon">🏆</span><span>Достижения</span></div>
+    <div class="tab" data-tab="settings"><span class="tab-icon">⚙️</span><span>Настройки</span></div>
+</nav>
+
+<div class="toast" id="toast">✓ Готово!</div>
+<footer class="footer"><div><a href="https://vk.com/supbrotmn" target="_blank">© 2026 САПБРОТМН</a></div><div>Создатель: Бардаков Евгений</div><div>Сделано с ❤️ к SUP в Тюмени</div></footer>
+
+<div id="shareCard"><div class="sc-header"><div class="sc-avatar" id="scAvatar">🏄</div><div class="sc-user-info"><h1 id="scName">SUP-Райдер</h1><div class="sc-user-title" id="scTitle">Уровень 1</div></div></div><div class="sc-stats"><div class="sc-stat-box"><div class="sc-stat-val" id="scKm">0</div><div class="sc-stat-lbl">КМ</div></div><div class="sc-stat-box"><div class="sc-stat-val" id="scTrips">0</div><div class="sc-stat-lbl">ВЫХОДОВ НА ВОДУ</div></div><div class="sc-stat-box"><div class="sc-stat-val" id="scStreak">0</div><div class="sc-stat-lbl">ДНЕЙ БЕЗ ПЕРЕРЫВА</div></div></div><div class="sc-medals" id="scMedals"></div><div class="sc-footer"><div class="sc-hashtag">#САПБРОТМН</div></div></div>
+
+<input type="file" id="avatarFileInput" accept="image/*" style="display:none;">
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    const LS = 'sup_log_brotmn_v5';
+    const ACH_LS = 'sup_achievements_unlocked';
+    const SURPRISE_LS = 'sup_surprise_today';
+    const XP_PER_KM = 15, XP_PER_TRIP = 30, BASE_NEXT_XP = 200, INCR_XP = 25;
+
+    let data = JSON.parse(localStorage.getItem(LS)) || {
+        entries: [], routes: [],
+        user: { name: 'SUP-Райдер', location: 'Тюмень', theme: 'light', board: '', birthdayDay: '', birthdayMonth: '', surprisesDone: 0, completedWeeks: [] },
+    };
+    let unlockedAchievements = JSON.parse(localStorage.getItem(ACH_LS)) || [];
+    let selectedPhotoBlob = null, currentGpxPoints = null, currentGpxStats = null, currentGpxRaw = null;
+    let map = null, kmChart = null, typeChart = null, currentCalendarDate = new Date(), selectedDateStr = null, currentTab = 'diary';
+
+    const ACHIEVEMENTS = [
+        { category: '💧 Водная стихия', id: 'first', name: 'Первый гребок', icon: '🐣', desc: '1-й выход на воду', type: 'trips', target: 1, unit: 'выход' },
+        { category: '💧 Водная стихия', id: 'walker', name: 'Прогулочник', icon: '🚶', desc: '10 км суммарно', type: 'km', target: 10, unit: 'км' },
+        { category: '💧 Водная стихия', id: 'confident', name: 'Уверенный райдер', icon: '🏃', desc: '50 км суммарно', type: 'km', target: 50, unit: 'км' },
+        { category: '💧 Водная стихия', id: 'wave', name: 'Повелитель волн', icon: '🦅', desc: '100 км суммарно', type: 'km', target: 100, unit: 'км' },
+        { category: '💧 Водная стихия', id: 'ocean', name: 'Океанский странник', icon: '🐋', desc: '250 км суммарно', type: 'km', target: 250, unit: 'км' },
+        { category: '💧 Водная стихия', id: 'legend', name: 'Легенда акватории', icon: '👑', desc: '500 км суммарно', type: 'km', target: 500, unit: 'км' },
+        { category: '💧 Водная стихия', id: 'sup_master', name: 'SUP-Мастер', icon: '🎯', desc: '1000 км суммарно', type: 'km', target: 1000, unit: 'км' },
+        { category: '💧 Водная стихия', id: 'man_steamer', name: 'Человек Пароход', icon: '🚢', desc: '1500 км суммарно', type: 'km', target: 1500, unit: 'км' },
+        { category: '💧 Водная стихия', id: 'poseidon', name: 'Посейдон', icon: '🌊', desc: '2000 км суммарно', type: 'km', target: 2000, unit: 'км' },
+        { category: '🏃 Марафонцы', id: 'marathon1', name: 'Первый марафон', icon: '🏞️', desc: '1 заплыв 10+ км', type: 'maxDist', target: 10, unit: 'км' },
+        { category: '🏃 Марафонцы', id: 'marathon2', name: 'Дальнобойщик', icon: '🚀', desc: '1 заплыв 20+ км', type: 'maxDist', target: 20, unit: 'км' },
+        { category: '🏃 Марафонцы', id: 'marathon3', name: 'Железный человек', icon: '🌊', desc: '1 заплыв 30+ км', type: 'maxDist', target: 30, unit: 'км' },
+        { category: '🏃 Марафонцы', id: 'marathon4', name: 'Невозможное возможно', icon: '🌟', desc: '1 заплыв 50+ км', type: 'maxDist', target: 50, unit: 'км' },
+        { category: '🔥 Дисциплина', id: 'streak3', name: 'Искра', icon: '🔥', desc: '3 дня подряд', type: 'streak', target: 3, unit: 'дня' },
+        { category: '🔥 Дисциплина', id: 'streak7', name: 'Стальной стержень', icon: '🧱', desc: '7 дней подряд', type: 'streak', target: 7, unit: 'дней' },
+        { category: '🔥 Дисциплина', id: 'streak14', name: 'Стальная воля', icon: '💪', desc: '14 дней подряд', type: 'streak', target: 14, unit: 'дней' },
+        { category: '🔥 Дисциплина', id: 'streak30', name: 'Киборг', icon: '🤖', desc: '30 дней подряд', type: 'streak', target: 30, unit: 'дней' },
+        { category: '📸 Визуализация', id: 'photo1', name: 'Первый кадр', icon: '📸', desc: '1 фото в дневнике', type: 'photos', target: 1, unit: 'фото' },
+        { category: '📸 Визуализация', id: 'photo5', name: 'Фотоохотник', icon: '📷', desc: '5 заплывов с фото', type: 'photos', target: 5, unit: 'фото' },
+        { category: '📸 Визуализация', id: 'photo15', name: 'Визуал', icon: '🎨', desc: '15 заплывов с фото', type: 'photos', target: 15, unit: 'фото' },
+        { category: '📸 Визуализация', id: 'desc1', name: 'Первый рассказ', icon: '✍️', desc: '1 описание (50+ символов)', type: 'descriptions', target: 1, unit: 'описание' },
+        { category: '📸 Визуализация', id: 'desc10', name: 'Сторителлер', icon: '📖', desc: '10 описаний (50+ символов)', type: 'descriptions', target: 10, unit: 'описаний' },
+        { category: '🎭 Разнообразие', id: 'type_easy', name: 'Лёгкий старт', icon: '🌊', desc: '3 сплава "Лёгкий"', type: 'type', targetType: 'легкий', target: 3, unit: 'раз' },
+        { category: '🎭 Разнообразие', id: 'type_train', name: 'Тренировочный день', icon: '⚡', desc: '5 сплавов "Тренировка"', type: 'type', targetType: 'тренировка', target: 5, unit: 'раз' },
+        { category: '🎭 Разнообразие', id: 'type_exp', name: 'Экспедиционер', icon: '🗺️', desc: '5 сплавов "Экспедиция"', type: 'type', targetType: 'экспедиция', target: 5, unit: 'раз' },
+        { category: '🎭 Разнообразие', id: 'type_matras', name: 'Матрасник', icon: '🛏️', desc: '3 сплава "Матрас"', type: 'type', targetType: 'матрас', target: 3, unit: 'раз' },
+        { category: '🎭 Разнообразие', id: 'type_beer', name: 'Пивной капитан', icon: '🍺', desc: '4 сплава "С пивом"', type: 'type', targetType: 'пиво', target: 4, unit: 'раз' },
+        { category: '🎭 Разнообразие', id: 'type_sun', name: 'Загоралово', icon: '🏖️', desc: '5 сплавов "Загорал"', type: 'type', targetType: 'загар', target: 5, unit: 'раз' },
+        { category: '🎭 Разнообразие', id: 'type_all', name: 'Мастер на все руки', icon: '🎪', desc: 'Использовать все 7 типов', type: 'typeAll', target: 7, unit: 'типов' },
+        { category: '🌍 Исследователь', id: 'loc3', name: 'Путешественник', icon: '🚗', desc: '10 разных локаций', type: 'uniqueLocations', target: 10, unit: 'локаций' },
+        { category: '🌍 Исследователь', id: 'loc5', name: 'Первопроходец', icon: '🗺️', desc: '20 разных локаций', type: 'uniqueLocations', target: 20, unit: 'локаций' },
+        { category: '🌍 Исследователь', id: 'loc10', name: 'Глобальный райдер', icon: '🌎', desc: '30 разных локаций', type: 'uniqueLocations', target: 30, unit: 'локаций' },
+        { category: '🎯 Специальные', id: 'birthday', name: 'С днём рождения!', icon: '🎂', desc: 'Заплыв в свой ДР', type: 'birthday', target: 1, unit: 'раз' },
+        { category: '🎯 Специальные', id: 'challenge4', name: 'Победитель челленджа', icon: '🏆', desc: '4 недельных челленджа', type: 'challenge', target: 4, unit: 'челленджа' },
+        { category: '🎯 Специальные', id: 'surprise5', name: 'Сюрприз дня', icon: '🎁', desc: '5 сюрпризов дня', type: 'surprise', target: 5, unit: 'раз' }
+    ];
+
+    function formatDateRu(dateStr) { const d = new Date(dateStr); return `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}.${d.getFullYear()}`; }
+    function formatShortDateRu(dateStr) { const d = new Date(dateStr); return `${d.getDate().toString().padStart(2,'0')}.${(d.getMonth()+1).toString().padStart(2,'0')}`; }
+    
+    function getStats() {
+        let totalKm = 0, totalTrips = 0, maxDist = 0, photos = 0, descriptions = 0, birthdayWalks = 0;
+        const dates = [], typeCounts = {}, locations = new Set();
+        const realEntries = data.entries.filter(e => e.type !== 'бонус');
+        realEntries.forEach(e => {
+            totalKm += e.dist; totalTrips++;
+            if (e.dist > maxDist) maxDist = e.dist;
+            if (e.photoId) photos++;
+            if (e.desc && e.desc.length >= 50) descriptions++;
+            dates.push(e.date);
+            if (e.type) typeCounts[e.type] = (typeCounts[e.type] || 0) + 1;
+            if (e.place) locations.add(e.place.trim().toLowerCase());
+        });
+        let streak = 0;
+        if (dates.length) {
+            const sorted = [...new Set(dates)].sort().reverse();
+            streak = 1;
+            let prev = new Date(sorted[0]);
+            for (let i = 1; i < sorted.length; i++) {
+                const curr = new Date(sorted[i]);
+                const diff = (prev - curr) / 86400000;
+                if (diff === 1) { streak++; prev = curr; }
+                else break;
+            }
+        }
+        if (data.user.birthdayDay && data.user.birthdayMonth) {
+            const birthdayMMDD = `${String(data.user.birthdayMonth).padStart(2,'0')}-${String(data.user.birthdayDay).padStart(2,'0')}`;
+            realEntries.forEach(e => {
+                const eDate = new Date(e.date);
+                const eMMDD = `${String(eDate.getMonth()+1).padStart(2,'0')}-${String(eDate.getDate()).padStart(2,'0')}`;
+                if (eMMDD === birthdayMMDD) birthdayWalks++;
+            });
+        }
+        return { totalKm, totalTrips, maxDist, streak, photos, descriptions, typeCounts, uniqueLocations: locations.size, birthdayWalks, challengesCompleted: data.user.completedWeeks?.length || 0, surprisesCompleted: data.user.surprisesDone || 0 };
+    }
+
+    function checkAchievements(stats) {
+        let newUnlock = false;
+        ACHIEVEMENTS.forEach(ach => {
+            if (unlockedAchievements.includes(ach.id)) return;
+            let current = 0;
+            if (ach.type === 'trips') current = stats.totalTrips;
+            else if (ach.type === 'km') current = stats.totalKm;
+            else if (ach.type === 'maxDist') current = stats.maxDist;
+            else if (ach.type === 'streak') current = stats.streak;
+            else if (ach.type === 'photos') current = stats.photos;
+            else if (ach.type === 'descriptions') current = stats.descriptions;
+            else if (ach.type === 'type') current = stats.typeCounts[ach.targetType] || 0;
+            else if (ach.type === 'typeAll') current = Object.keys(stats.typeCounts).length;
+            else if (ach.type === 'uniqueLocations') current = stats.uniqueLocations;
+            else if (ach.type === 'birthday') current = stats.birthdayWalks;
+            else if (ach.type === 'challenge') current = stats.challengesCompleted;
+            else if (ach.type === 'surprise') current = stats.surprisesCompleted;
+            if (current >= ach.target) {
+                unlockedAchievements.push(ach.id);
+                newUnlock = true;
+                toast(`🎉 Достижение: ${ach.name}!`);
+                canvasConfetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } });
+            }
+        });
+        if (newUnlock) {
+            localStorage.setItem(ACH_LS, JSON.stringify(unlockedAchievements));
+            renderAchievements();
+        }
+    }
+
+    function renderAchievements() {
+        const stats = getStats();
+        checkAchievements(stats);
+        const container = document.getElementById('achievementsList');
+        if (!container) return;
+        const categories = [...new Set(ACHIEVEMENTS.map(a => a.category))];
+        let html = '';
+        for (const category of categories) {
+            const categoryAchs = ACHIEVEMENTS.filter(a => a.category === category);
+            html += `<div class="ach-category"><div class="ach-category-title">${category}</div><div class="ach-grid">`;
+            for (const ach of categoryAchs) {
+                const isUnlocked = unlockedAchievements.includes(ach.id);
+                let current = 0;
+                if (ach.type === 'trips') current = stats.totalTrips;
+                else if (ach.type === 'km') current = stats.totalKm;
+                else if (ach.type === 'maxDist') current = stats.maxDist;
+                else if (ach.type === 'streak') current = stats.streak;
+                else if (ach.type === 'photos') current = stats.photos;
+                else if (ach.type === 'descriptions') current = stats.descriptions;
+                else if (ach.type === 'type') current = stats.typeCounts[ach.targetType] || 0;
+                else if (ach.type === 'typeAll') current = Object.keys(stats.typeCounts).length;
+                else if (ach.type === 'uniqueLocations') current = stats.uniqueLocations;
+                else if (ach.type === 'birthday') current = stats.birthdayWalks;
+                else if (ach.type === 'challenge') current = stats.challengesCompleted;
+                else if (ach.type === 'surprise') current = stats.surprisesCompleted;
+                const pct = Math.min(100, (current / ach.target) * 100);
+                html += `<div class="ach-card ${isUnlocked ? 'unlocked' : ''}"><div class="ach-icon">${ach.icon}</div><div class="ach-name">${ach.name}</div><div class="ach-desc" style="font-size:0.7rem;">${ach.desc}</div><div class="ach-progress-bar"><div class="ach-progress-fill" style="width:${pct}%"></div></div><div class="ach-status">${Math.min(current, ach.target)} / ${ach.target} ${ach.unit || ''} ${isUnlocked ? '✅' : ''}</div></div>`;
+            }
+            html += `</div></div>`;
+        }
+        container.innerHTML = html;
+    }
+
+    function saveData() { localStorage.setItem(LS, JSON.stringify(data)); }
+    function toast(msg) { const t = document.getElementById('toast'); t.innerHTML = `✓ ${msg}`; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+    function calcXP() { const stats = getStats(); let bonus = data.entries.reduce((sum, e) => sum + (e.bonusXP || 0), 0); return Math.floor(stats.totalKm * XP_PER_KM + stats.totalTrips * XP_PER_TRIP + bonus); }
+    function getLevel(xp) { let lvl = 1, need = BASE_NEXT_XP, rem = xp; while (rem >= need && lvl < 50) { rem -= need; lvl++; need = Math.floor(BASE_NEXT_XP + (lvl-1) * INCR_XP); } return { level: lvl, cur: rem, next: need, pct: (rem / need) * 100 }; }
+    function getTitle(km) { if (km >= 500) return "🐋 Океанский"; if (km >= 250) return "🌊 Повелитель"; if (km >= 100) return "🦅 Покоритель"; if (km >= 50) return "🏃 Уверенный"; if (km >= 10) return "🚶 Прогулочник"; return "🐣 Начинающий"; }
+    function renderProfile() {
+        const stats = getStats(), xp = calcXP(), lvl = getLevel(xp);
+        document.getElementById('pName').innerText = data.user.name;
+        document.getElementById('pTitle').innerText = getTitle(stats.totalKm);
+        document.getElementById('pLevel').innerText = `Ур. ${lvl.level}`;
+        document.getElementById('xpBar').style.width = `${lvl.pct}%`;
+        document.getElementById('xpRing').style.setProperty('--pct', lvl.pct);
+        document.getElementById('xpRingText').innerText = `${Math.round(lvl.pct)}%`;
+        document.getElementById('xpText').innerText = `${Math.floor(lvl.cur)} / ${lvl.next} XP`;
+        document.getElementById('sKm').innerText = stats.totalKm.toFixed(1);
+        document.getElementById('sTrips').innerText = stats.totalTrips;
+        document.getElementById('sStreak').innerText = stats.streak;
+        updateProfileAvatar();
+    }
+    function renderChallenge() {
+        const now = new Date(); const startOfWeek = new Date(now); startOfWeek.setDate(now.getDate() - now.getDay() + 1); startOfWeek.setHours(0,0,0,0);
+        let weekKm = data.entries.filter(e => e.type !== 'бонус' && new Date(e.date) >= startOfWeek).reduce((s, e) => s + e.dist, 0);
+        const pct = Math.min(100, (weekKm / 15) * 100);
+        document.getElementById('chFill').style.width = `${pct}%`;
+        document.getElementById('chCurrent').innerHTML = `${weekKm.toFixed(1)} / 15 км`;
+        document.getElementById('chTarget').innerHTML = weekKm >= 15 ? '✅ Выполнен!' : '15 км';
+        const weekKey = startOfWeek.toISOString().slice(0,10);
+        if (weekKm >= 15 && !data.user.completedWeeks.includes(weekKey)) {
+            data.user.completedWeeks.push(weekKey);
+            saveData();
+            toast('🏆 Недельный челлендж выполнен!');
+        }
+    }
+    async function fetchWeather(lat=57.1529, lon=65.5342) {
+        try { const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`); const d = await r.json(); if (d.current_weather) { const icons = {0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',51:'🌦️',53:'🌧️',61:'🌧️',71:'🌨️',80:'🌦️',95:'⛈️'}; document.getElementById('wIcon').innerText = icons[d.current_weather.weathercode] || '⛅'; document.getElementById('wTemp').innerText = `${d.current_weather.temperature}°C`; document.getElementById('wWind').innerHTML = `🌬️ ${(d.current_weather.windspeed/3.6).toFixed(1)} м/с • Тюмень`; } } catch(e) {} }
+    document.getElementById('wRefresh').onclick = () => fetchWeather();
+
+    let photoDB = null, avatarPhotoDB = null;
+    function openPhotoDB() { return new Promise(resolve=>{ const r=indexedDB.open('SUPPhotos',1); r.onupgradeneeded=e=>e.target.result.createObjectStore('photos',{keyPath:'id'}); r.onsuccess=()=>{photoDB=r.result; resolve()}; r.onerror=()=>resolve(); }); }
+    function openAvatarPhotoDB() { return new Promise(resolve=>{ const r=indexedDB.open('SUPAvatar',1); r.onupgradeneeded=e=>e.target.result.createObjectStore('avatar',{keyPath:'id'}); r.onsuccess=()=>{avatarPhotoDB=r.result; resolve()}; r.onerror=()=>resolve(); }); }
+    async function savePhoto(blob) { await openPhotoDB(); const id=Date.now().toString(); return new Promise((resolve,reject)=>{ const tx=photoDB.transaction('photos','readwrite'); tx.objectStore('photos').put({id,blob}); tx.oncomplete=()=>resolve(id); tx.onerror=reject; }); }
+    async function getPhoto(id) { if(!photoDB) await openPhotoDB(); return new Promise(resolve=>{ const tx=photoDB.transaction('photos','readonly'); const req=tx.objectStore('photos').get(id); req.onsuccess=()=>resolve(req.result?.blob); req.onerror=()=>resolve(null); }); }
+    async function compressImage(file) { return new Promise(resolve=>{ const img=new Image(); img.src=URL.createObjectURL(file); img.onload=()=>{ const c=document.createElement('canvas'); let w=img.width,h=img.height; if(w>400){ h=h*400/w; w=400; } c.width=w; c.height=h; c.getContext('2d').drawImage(img,0,0,w,h); c.toBlob(resolve,'image/jpeg',0.7); URL.revokeObjectURL(img.src); }; }); }
+    async function saveAvatarPhoto(blob) { await openAvatarPhotoDB(); return new Promise((resolve,reject)=>{ const tx=avatarPhotoDB.transaction('avatar','readwrite'); tx.objectStore('avatar').put({id:'profile_avatar',blob}); tx.oncomplete=()=>resolve(); tx.onerror=reject; }); }
+    async function getAvatarPhoto() { if(!avatarPhotoDB) await openAvatarPhotoDB(); return new Promise(resolve=>{ const tx=avatarPhotoDB.transaction('avatar','readonly'); const req=tx.objectStore('avatar').get('profile_avatar'); req.onsuccess=()=>resolve(req.result?.blob); req.onerror=()=>resolve(null); }); }
+    async function deleteAvatarPhoto() { if(!avatarPhotoDB) await openAvatarPhotoDB(); return new Promise(resolve=>{ const tx=avatarPhotoDB.transaction('avatar','readwrite'); tx.objectStore('avatar').delete('profile_avatar'); tx.oncomplete=()=>resolve(); tx.onerror=()=>resolve(); }); }
+    async function updateProfileAvatar() {
+        const profileDiv = document.getElementById('profileAvatar'), settingsDiv = document.getElementById('settingsAvatar'), removeBtn = document.getElementById('removeAvatarBtn');
+        const blob = await getAvatarPhoto();
+        if(blob){ const url=URL.createObjectURL(blob); profileDiv.innerHTML=`<img src="${url}" alt="Аватар">`; settingsDiv.innerHTML=`<img src="${url}" alt="Аватар">`; if(removeBtn) removeBtn.style.display='inline-block'; }
+        else { profileDiv.innerHTML='🏄'; settingsDiv.innerHTML='🏄'; if(removeBtn) removeBtn.style.display='none'; }
+    }
+
+    let photoCache = new Map();
+    async function renderEntries() {
+        const container = document.getElementById('entriesList');
+        if (!data.entries.length) { 
+            container.innerHTML = '<div style="padding:2rem; text-align:center;">✨ Пока ни одного заплыва</div>'; 
+            return; 
+        }
+        let html = '';
+        for (const e of [...data.entries].reverse()) {
+            let photoHtml = '';
+            if (e.photoId) {
+                let blob = photoCache.get(e.photoId);
+                if (!blob) {
+                    blob = await getPhoto(e.photoId);
+                    if (blob) photoCache.set(e.photoId, blob);
+                }
+                photoHtml = blob ? `<img src="${URL.createObjectURL(blob)}" class="entry-photo" onload="URL.revokeObjectURL(this.src)">` : '<div class="entry-photo">🏄</div>';
+            } else {
+                photoHtml = '<div class="entry-photo">🏄</div>';
+            }
+            let timeStr = '', placeStr = '';
+            if (e.time) { let h = Math.floor(e.time/60), m = e.time%60; if(h||m) timeStr = `<span class="entry-time">⏱ ${h>0?h+'ч ':''}${m}мин</span>`; }
+            if (e.place) placeStr = `<div class="entry-place">📍 ${e.place}</div>`;
+            html += `<div class="entry">${photoHtml}<div class="entry-content"><div class="entry-head"><span class="entry-date">${formatDateRu(e.date)}</span><span class="entry-dist">${e.dist} км</span></div>${timeStr}${placeStr}<span class="entry-type">${e.type}</span>${e.desc ? `<p class="entry-desc">${e.desc}</p>` : ''}<div class="entry-actions"><button class="btn-outline btn-sm" onclick="shareEntry(${e.id})" aria-label="Поделиться">📤</button><button class="btn-danger btn-sm" onclick="delEntry(${e.id})" aria-label="Удалить">🗑️</button></div></div></div>`;
+        }
+        container.innerHTML = html;
+    }
+    
+    function initMap(containerId='routeMap', lat=57.1529, lon=65.5342) { if(map) map.remove(); map = L.map(containerId).setView([lat,lon],11); L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'© OSM'}).addTo(map); return map; }
+    function parseGPX(xml) { try { const parser = new DOMParser(), doc = parser.parseFromString(xml,'text/xml'), points=[]; doc.querySelectorAll('trkpt').forEach(p=>points.push({lat:parseFloat(p.getAttribute('lat')),lon:parseFloat(p.getAttribute('lon'))})); let dist=0; for(let i=1;i<points.length;i++){ const dlat=(points[i].lat-points[i-1].lat)*111e3, dlon=(points[i].lon-points[i-1].lon)*111e3*Math.cos(points[i-1].lat*Math.PI/180); dist+=Math.sqrt(dlat*dlat+dlon*dlon)/1000; } return {points,distance:dist,raw:xml}; } catch(e){ toast('❌ Ошибка GPX'); return null; } }
+    let currentGpx = null;
+    document.getElementById('pickGpxBtn').onclick = () => document.getElementById('gpxFile').click();
+    document.getElementById('gpxFile').onchange = async (e) => { const file=e.target.files[0]; if(!file) return; const text=await file.text(); const parsed=parseGPX(text); if(parsed){ currentGpx=parsed; document.getElementById('gpxPreview').classList.remove('hidden'); initMap('routeMap'); const line=L.polyline(parsed.points.map(p=>[p.lat,p.lon]),{color:'#e9b35f',weight:4}).addTo(map); map.fitBounds(line.getBounds()); document.getElementById('gpxStats').innerHTML=`<div>📏 ${parsed.distance.toFixed(1)} км</div>`; } };
+    document.getElementById('saveRouteBtn').onclick = () => { if(!currentGpx) return; const name = document.getElementById('routeName').value.trim() || 'Новый маршрут'; data.routes.unshift({id:Date.now(),name,distance:currentGpx.distance,points:currentGpx.points,raw:currentGpx.raw}); saveData(); toast('✅ Маршрут сохранён'); renderRoutes(); };
+    function renderRoutes() { const container=document.getElementById('routesList'); if(!data.routes.length){ container.innerHTML='<div style="padding:1rem; text-align:center;">Нет маршрутов</div>'; return; } container.innerHTML=data.routes.map(r=>`<div class="route-card" onclick="viewRoute(${r.id})"><div class="route-icon">🗺️</div><div class="route-content"><div class="route-name">${r.name}</div><div class="route-meta">📏 ${r.distance?.toFixed(1)} км</div></div><button class="btn-danger btn-sm" onclick="event.stopPropagation(); deleteRoute(${r.id})" aria-label="Удалить маршрут">🗑️</button></div>`).join(''); }
+    window.viewRoute = (id)=>{ const route=data.routes.find(r=>r.id===id); if(route && route.points){ 
+        const routesTab = document.querySelector('.tab[data-tab="routes"]');
+        if (routesTab) routesTab.click();
+        setTimeout(()=>{ 
+            initMap('routeMap'); 
+            const line = L.polyline(route.points.map(p=>[p.lat,p.lon]),{color:'#e9b35f',weight:4}).addTo(map); 
+            map.fitBounds(line.getBounds()); 
+        }, 300);
+    } };
+    window.deleteRoute = (id)=>{ if(confirm('Удалить маршрут?')){ data.routes=data.routes.filter(r=>r.id!==id); saveData(); renderRoutes(); toast('🗑️ Удалено'); } };
+    window.shareEntry = async (id)=>{ const e=data.entries.find(x=>x.id===id); if(!e) return; const text=`🚣 ${e.dist} км • ${formatDateRu(e.date)}\n${e.desc||''}\n#SUPBROTMN`; if(navigator.share) await navigator.share({title:'SUP-заплыв',text}); else await navigator.clipboard.writeText(text); toast('📋 Скопировано'); };
+    window.delEntry = (id)=>{ if(confirm('Удалить запись?')){ data.entries=data.entries.filter(e=>e.id!==id); saveData(); photoCache.clear(); renderProfile(); renderAchievements(); renderEntries(); renderChallenge(); renderStatsAndCharts(); toast('🗑️ Удалено'); } };
+    let selectedPhoto = null;
+    document.getElementById('pickPhoto').onclick = () => document.getElementById('ePhoto').click();
+    document.getElementById('ePhoto').onchange = async (e)=>{ const file=e.target.files[0]; if(file){ selectedPhoto=await compressImage(file); document.getElementById('photoPrev').innerHTML=`<img src="${URL.createObjectURL(selectedPhoto)}" class="photo-thumb">`; } };
+    document.getElementById('entryForm').onsubmit = async (e)=>{ e.preventDefault(); let photoId=null; if(selectedPhoto) photoId=await savePhoto(selectedPhoto); const hours=parseInt(document.getElementById('eHours').value)||0, minutes=parseInt(document.getElementById('eMinutes').value)||0; const entry={id:Date.now(),date:document.getElementById('eDate').value,dist:parseFloat(document.getElementById('eDist').value),time:hours*60+minutes,type:document.getElementById('eType').value,place:document.getElementById('ePlace').value,desc:document.getElementById('eDesc').value,photoId}; data.entries.unshift(entry); saveData(); selectedPhoto=null; document.getElementById('photoPrev').innerHTML=''; photoCache.clear(); renderProfile(); renderAchievements(); renderEntries(); renderChallenge(); renderStatsAndCharts(); toast('✅ Запись добавлена!'); document.getElementById('entryForm').reset(); document.getElementById('eDate').valueAsDate=new Date(); const today=new Date().toISOString().slice(0,10); const todayEntries=data.entries.filter(en=>en.date===today && en.type!=='бонус'); checkSurprise(todayEntries); };
+    function renderCalendar() {
+        const year=currentCalendarDate.getFullYear(), month=currentCalendarDate.getMonth(), firstDay=new Date(year,month,1), lastDay=new Date(year,month+1,0);
+        let startDayOfWeek=firstDay.getDay(); startDayOfWeek=startDayOfWeek===0?7:startDayOfWeek;
+        const months=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+        document.getElementById('currentMonthLabel').innerText=`${months[month]} ${year}`;
+        const dayKm={}; data.entries.filter(e=>e.type!=='бонус').forEach(e=>{ const d=new Date(e.date); if(d.getFullYear()===year && d.getMonth()===month) dayKm[e.date]=(dayKm[e.date]||0)+e.dist; });
+        const today=new Date(), todayStr=today.toISOString().slice(0,10);
+        let html='<div class="calendar-grid"><div class="calendar-weekdays"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div><div class="calendar-days">';
+        for(let i=1;i<startDayOfWeek;i++) html+='<div class="calendar-day empty"></div>';
+        for(let d=1;d<=lastDay.getDate();d++){ const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; const km=dayKm[dateStr]||0; let level=0; if(km>0) level=1; if(km>=3) level=2; if(km>=7) level=3; if(km>=15) level=4; const isToday=dateStr===todayStr; html+=`<div class="calendar-day calendar-level-${level} ${isToday?'today':''}" data-date="${dateStr}" data-km="${km}">${d}</div>`; }
+        const totalCells=Math.ceil((startDayOfWeek-1+lastDay.getDate())/7)*7, remainingCells=totalCells-(startDayOfWeek-1+lastDay.getDate());
+        for(let i=0;i<remainingCells;i++) html+='<div class="calendar-day empty"></div>';
+        html+='</div></div>';
+        document.getElementById('calendarContainer').innerHTML=html;
+        document.querySelectorAll('.calendar-day[data-date]').forEach(el=>{ el.addEventListener('click',()=>{ const date=el.dataset.date, km=parseFloat(el.dataset.km)||0; const info=document.getElementById('selectedDateInfo'); if(km>0) info.innerHTML=`<span>📅 ${formatShortDateRu(date)}</span><br>🏄‍♂️ Вы прошли <strong>${km.toFixed(1)} км</strong>`; else info.innerHTML=`<span>📅 ${formatShortDateRu(date)}</span><br>🌊 В этот день заплывов не было`; }); });
+    }
+    function renderStatsAndCharts() {
+        const stats=getStats(), dayKm={}; data.entries.filter(e=>e.type!=='бонус').forEach(e=>dayKm[e.date]=(dayKm[e.date]||0)+e.dist);
+        const totalDays=new Set(data.entries.filter(e=>e.type!=='бонус').map(e=>e.date)).size;
+        document.getElementById('statAvgKm').innerText=(totalDays>0?stats.totalKm/totalDays:0).toFixed(1);
+        document.getElementById('statTotalDays').innerText=totalDays;
+        document.getElementById('statMaxDay').innerText=Math.max(...Object.values(dayKm),0).toFixed(1);
+        document.getElementById('statTypes').innerText=Object.keys(stats.typeCounts).length;
+        const last14=[]; for(let i=13;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); const ds=d.toISOString().slice(0,10); last14.push({date:formatShortDateRu(ds),km:dayKm[ds]||0}); }
+        if(kmChart) kmChart.destroy();
+        kmChart=new Chart(document.getElementById('kmChart'),{type:'bar',data:{labels:last14.map(d=>d.date),datasets:[{label:'км',data:last14.map(d=>d.km),backgroundColor:'rgba(45,212,191,0.8)',borderRadius:8}]},options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{display:false}}}});
+        if(typeChart) typeChart.destroy();
+        typeChart=new Chart(document.getElementById('typeChart'),{type:'doughnut',data:{labels:Object.keys(stats.typeCounts),datasets:[{data:Object.values(stats.typeCounts),backgroundColor:['#2dd4bf','#e9b35f','#fbbf24','#10b981','#8b5cf6','#ef4444','#06b6d4']}]},options:{responsive:true}});
+        renderCalendar();
+    }
+    document.getElementById('prevMonth').onclick=()=>{ currentCalendarDate.setMonth(currentCalendarDate.getMonth()-1); renderStatsAndCharts(); };
+    document.getElementById('nextMonth').onclick=()=>{ currentCalendarDate.setMonth(currentCalendarDate.getMonth()+1); renderStatsAndCharts(); };
+    document.getElementById('shareCardBtn').onclick=async()=>{
+        toast('📸 Готово');
+        const stats=getStats(), xp=calcXP(), lvl=getLevel(xp), title=getTitle(stats.totalKm);
+        document.getElementById('scName').innerText=data.user.name.toUpperCase();
+        document.getElementById('scTitle').innerText=`${title} • Уровень ${lvl.level}`;
+        const avatarBlob=await getAvatarPhoto();
+        const scAvatarDiv=document.getElementById('scAvatar');
+        if(avatarBlob){ const url=URL.createObjectURL(avatarBlob); scAvatarDiv.innerHTML=`<img src="${url}" style="width:100%;height:100%;object-fit:cover;">`; }
+        else { scAvatarDiv.innerHTML=data.user.name.charAt(0).toUpperCase(); scAvatarDiv.style.fontSize='2.5rem'; scAvatarDiv.style.display='flex'; scAvatarDiv.style.alignItems='center'; scAvatarDiv.style.justifyContent='center'; }
+        document.getElementById('scKm').innerText=stats.totalKm.toFixed(1);
+        document.getElementById('scTrips').innerText=stats.totalTrips;
+        document.getElementById('scStreak').innerText=stats.streak;
+        const medalsContainer=document.getElementById('scMedals'); medalsContainer.innerHTML='';
+        const topAchs=ACHIEVEMENTS.map(ach=>{ let progress=0; if(ach.type==='trips') progress=stats.totalTrips; else if(ach.type==='km') progress=stats.totalKm; else if(ach.type==='streak') progress=stats.streak; else if(ach.type==='type') progress=stats.typeCounts[ach.targetType]||0; else if(ach.type==='typeAll') progress=Object.keys(stats.typeCounts).length; else if(ach.type==='uniqueLocations') progress=stats.uniqueLocations; else if(ach.type==='birthday') progress=stats.birthdayWalks; else if(ach.type==='challenge') progress=stats.challengesCompleted; else if(ach.type==='surprise') progress=stats.surprisesCompleted; else progress=0; const isUnlocked=progress>=ach.target; return {...ach,isUnlocked,percent:Math.min(100,(progress/ach.target)*100)}; }).sort((a,b)=>{ if(a.isUnlocked && !b.isUnlocked) return -1; if(!a.isUnlocked && b.isUnlocked) return 1; return b.percent-a.percent; }).slice(0,9);
+        topAchs.forEach(ach=>{ const div=document.createElement('div'); div.className=`sc-medal ${ach.isUnlocked?'gold':'locked'}`; div.innerHTML=`<div class="sc-medal-icon" style="font-size:1.5rem;">${ach.icon}</div><div style="font-size:0.7rem;">${ach.name}</div>`; medalsContainer.appendChild(div); });
+        const card=document.getElementById('shareCard'); card.style.display='flex'; card.style.position='absolute';
+        await document.fonts.ready;
+        try{ const canvas=await html2canvas(card,{scale:3}); const a=document.createElement('a'); a.download=`SUPBROTMN-${Date.now()}.png`; a.href=canvas.toDataURL('image/png'); a.click(); } catch(e){ toast('❌ Ошибка'); }
+        card.style.display='none'; card.style.top='-2000px';
+        if(avatarBlob && scAvatarDiv.querySelector('img')) URL.revokeObjectURL(scAvatarDiv.querySelector('img').src);
+    };
+    const SURPRISES=[{desc:'Проплыви 3 км сегодня',reward:20,type:'km',target:3},{desc:'Сделай 2 заплыва сегодня',reward:25,type:'trips',target:2},{desc:'Добавь фото к заплыву',reward:15,type:'photo',target:1}];
+    function initSurprise(){ const today=new Date().toISOString().slice(0,10); const saved=localStorage.getItem(SURPRISE_LS); if(saved){ const parsed=JSON.parse(saved); if(parsed.date===today && !parsed.completed){ renderSurprise(parsed); return; } } const surprise=SURPRISES[Math.floor(Math.random()*SURPRISES.length)]; const surpriseData={date:today,...surprise,completed:false}; localStorage.setItem(SURPRISE_LS,JSON.stringify(surpriseData)); renderSurprise(surpriseData); }
+    function renderSurprise(surprise){ document.getElementById('surpriseCard').style.display='block'; document.getElementById('surpriseDesc').innerText=surprise.desc; document.getElementById('surpriseReward').innerHTML=`+${surprise.reward} XP`; }
+    function checkSurprise(todayEntries){ const saved=localStorage.getItem(SURPRISE_LS); if(!saved) return; const surprise=JSON.parse(saved); if(surprise.completed) return; let completed=false; if(surprise.type==='km') completed=todayEntries.reduce((s,e)=>s+e.dist,0)>=surprise.target; else if(surprise.type==='trips') completed=todayEntries.length>=surprise.target; else if(surprise.type==='photo') completed=todayEntries.some(e=>e.photoId); if(completed){ surprise.completed=true; localStorage.setItem(SURPRISE_LS,JSON.stringify(surprise)); data.user.surprisesDone++; saveData(); toast(`🎁 Сюрприз! +${surprise.reward} XP`); canvasConfetti({particleCount:50,spread:60,origin:{y:0.6}}); document.getElementById('surpriseCard').style.display='none'; renderProfile(); renderAchievements(); } }
+    document.getElementById('uploadAvatarBtn').onclick=()=>document.getElementById('avatarFileInput').click();
+    document.getElementById('avatarFileInput').onchange=async(e)=>{ const file=e.target.files[0]; if(!file) return; const compressed=await compressImage(file); await saveAvatarPhoto(compressed); await updateProfileAvatar(); toast('✅ Фото профиля обновлено'); };
+    document.getElementById('removeAvatarBtn').onclick=async()=>{ if(confirm('Удалить фото профиля?')){ await deleteAvatarPhoto(); await updateProfileAvatar(); toast('🗑️ Фото удалено'); } };
+    function fillBirthdaySelects(){
+        const daySel=document.getElementById('setBirthdayDay'); daySel.innerHTML='<option value="">День</option>'; for(let i=1;i<=31;i++){ const opt=document.createElement('option'); opt.value=i; opt.textContent=i; daySel.appendChild(opt); }
+        const monthSel=document.getElementById('setBirthdayMonth'); monthSel.innerHTML='<option value="">Месяц</option>'; const months=['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь']; months.forEach((m,idx)=>{ const opt=document.createElement('option'); opt.value=idx+1; opt.textContent=m; monthSel.appendChild(opt); });
+        if(data.user.birthdayDay) daySel.value=data.user.birthdayDay;
+        if(data.user.birthdayMonth) monthSel.value=data.user.birthdayMonth;
+        document.getElementById('setBoard').value=data.user.board||'';
+    }
+    document.getElementById('saveSettings').onclick=()=>{ data.user.name=document.getElementById('setName').value||data.user.name; data.user.location=document.getElementById('setLocation').value||data.user.location; data.user.birthdayDay=document.getElementById('setBirthdayDay').value||''; data.user.birthdayMonth=document.getElementById('setBirthdayMonth').value||''; data.user.board=document.getElementById('setBoard').value||''; saveData(); renderProfile(); toast('✅ Профиль сохранён'); };
+    document.getElementById('exportBtn').onclick=()=>{ const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'})); a.download=`supbrotmn_${new Date().toISOString().slice(0,10)}.json`; a.click(); toast('💾 Экспорт'); };
+    document.getElementById('importBtn').onclick=()=>document.getElementById('importFile').click();
+    document.getElementById('importFile').onchange=(e)=>{ const file=e.target.files[0]; if(!file) return; const reader=new FileReader(); reader.onload=(ev)=>{ try{ const d=JSON.parse(ev.target.result); if(d.entries) data=d; saveData(); location.reload(); } catch(e2){ toast('❌ Ошибка файла'); } }; reader.readAsText(file); };
+    document.getElementById('resetBtn').onclick=()=>{ if(confirm('Удалить все данные?')){ localStorage.clear(); location.reload(); } };
+    function applyTheme(t){ document.documentElement.setAttribute('data-theme',t); saveData(); }
+    document.getElementById('themeToggle').onclick=()=>{ data.user.theme=data.user.theme==='dark'?'light':'dark'; applyTheme(data.user.theme); toast(`Тема: ${data.user.theme==='dark'?'🌙':'☀️'}`); };
+    applyTheme(data.user.theme||'light');
+    function switchTab(tab){
+        if(tab===currentTab) return;
+        const targetId=tab==='new'?'diary':tab;
+        const currentEl=document.getElementById(`tab-${currentTab}`), nextEl=document.getElementById(`tab-${targetId}`);
+        if(currentEl){ currentEl.classList.add('fade-out'); currentEl.classList.remove('active'); }
+        setTimeout(()=>{
+            if(currentEl){ currentEl.classList.remove('fade-out'); currentEl.style.display='none'; }
+            if(nextEl){ nextEl.style.display='block'; nextEl.classList.add('active','fade-in'); setTimeout(()=>nextEl.classList.remove('fade-in'),500); }
+            currentTab=tab;
+            setTimeout(()=>{
+                const targetElement=nextEl||document.getElementById(`tab-${targetId}`);
+                if(targetElement){ const pos=targetElement.getBoundingClientRect().top+window.pageYOffset; window.scrollTo({top:pos-10,behavior:'smooth'}); }
+            },100);
+            document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+            document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
+            if(tab==='ach') renderAchievements();
+            if(tab==='routes') setTimeout(()=>{ initMap('routeMap'); renderRoutes(); },100);
+            if(tab==='settings'){ document.getElementById('setName').value=data.user.name; document.getElementById('setLocation').value=data.user.location||''; fillBirthdaySelects(); document.getElementById('setBoard').value=data.user.board||''; updateProfileAvatar(); }
+            if(tab==='stats') renderStatsAndCharts();
+            if(tab==='diary') renderEntries();
+        },250);
+    }
+    document.querySelectorAll('.tab').forEach(btn=>{ btn.onclick=()=>{ const tab=btn.dataset.tab; switchTab(tab); }; });
+    window.onload = async () => {
+        await openPhotoDB();
+        await openAvatarPhotoDB();
+        renderProfile();
+        renderAchievements();
+        await renderEntries();
+        renderChallenge();
+        renderRoutes();
+        renderStatsAndCharts();
+        fetchWeather();
+        initSurprise();
+        document.getElementById('eDate').valueAsDate = new Date();
+        document.getElementById('setName').value = data.user.name;
+        document.getElementById('setLocation').value = data.user.location || '';
+        fillBirthdaySelects();
+        document.getElementById('setBoard').value = data.user.board || '';
+        currentCalendarDate = new Date();
+    };
+</script>
+</body>
+</html>
