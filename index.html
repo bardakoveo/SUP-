@@ -380,13 +380,14 @@
         });
         if (newUnlock) {
             localStorage.setItem(ACH_LS, JSON.stringify(unlockedAchievements));
-            renderAchievements();
         }
+        // ВАЖНО: всегда обновляем отображение после проверки
+        renderAchievements();
     }
 
     function renderAchievements() {
         const stats = getStats();
-        checkAchievements(stats);
+        // Не вызываем checkAchievements здесь, чтобы избежать цикла
         const container = document.getElementById('achievementsList');
         if (!container) return;
         const categories = [...new Set(ACHIEVEMENTS.map(a => a.category))];
@@ -611,7 +612,7 @@
             },100);
             document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
             document.querySelector(`.tab[data-tab="${tab}"]`).classList.add('active');
-            if(tab==='ach') renderAchievements();
+            if(tab==='ach') { renderAchievements(); }
             if(tab==='routes') setTimeout(()=>{ initMap('routeMap'); renderRoutes(); },100);
             if(tab==='settings'){ document.getElementById('setName').value=data.user.name; document.getElementById('setLocation').value=data.user.location||''; fillBirthdaySelects(); document.getElementById('setBoard').value=data.user.board||''; updateProfileAvatar(); }
             if(tab==='stats') renderStatsAndCharts();
